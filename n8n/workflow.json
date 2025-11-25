@@ -1,0 +1,109 @@
+{
+  "name": "Alcovia Intervention Loop",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "test",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "toEmail": "kaushaljee82@gmail.com",
+        "subject": "Student Needs Intervention",
+        "text": "Student ID: {{ $json.student_id }} has failed the daily check-in.\nQuiz Score: {{ $json.quiz_score }}\nFocus Minutes: {{ $json.focus_minutes }}\n\nClick here to assign remedial task: http://localhost:5678/webhook/assign?student_id={{ $json.student_id }}"
+      },
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "hours"
+      },
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        860,
+        300
+      ],
+      "webhookId": "assign"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3000/assign-intervention",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "student_id",
+              "value": "={{ $json.query.student_id }}"
+            },
+            {
+              "name": "task_description",
+              "value": "Read Chapter 4"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Unlock App",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1060,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Unlock App",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
